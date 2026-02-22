@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Change Role to Admin</title>
+</head>
+<body>
+  <h1>Change Role to Admin</h1>
+  <button id="changeRoleBtn">Ubah Role Menjadi Admin</button>
+
+  <script>
+    document.getElementById('changeRoleBtn').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/user/change-role', {
+          method: 'POST'
+        });
+        const data = await response.json();
+        alert(data.message);
+        if (response.ok) {
+          window.location.href = '/dashboard'; // Redirect ke dashboard setelah berhasil
+        }
+      } catch (error) {
+        alert('Error: ' + error);
+      }
+    });
+  </script>
+</body>
+</html>
