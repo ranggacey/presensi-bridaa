@@ -45,115 +45,13 @@ export default function AdminDashboard() {
             universities: data.universities || []
           });
           
-          if (data.attendanceTrend) {
-            setAttendanceTrend(data.attendanceTrend);
-          } else {
-            // Fallback to mock attendance trend data
-            setAttendanceTrend([
-              { date: subDays(new Date(), 6), present: 28, late: 5, absent: 15 },
-              { date: subDays(new Date(), 5), present: 30, late: 3, absent: 15 },
-              { date: subDays(new Date(), 4), present: 29, late: 6, absent: 13 },
-              { date: subDays(new Date(), 3), present: 31, late: 4, absent: 13 },
-              { date: subDays(new Date(), 2), present: 33, late: 2, absent: 13 },
-              { date: subDays(new Date(), 1), present: 30, late: 5, absent: 13 },
-              { date: new Date(), present: 32, late: 4, absent: 12 }
-            ]);
-          }
-          
-          if (data.recentActivities && data.recentActivities.length > 0) {
-            setRecentActivities(data.recentActivities);
-          } else {
-            // Fallback to mock activities data
-            setRecentActivities([
-              { id: 1, type: 'attendance', user: 'Budi Santoso', action: 'melakukan presensi', time: new Date(), status: 'on-time' },
-              { id: 2, type: 'identity', user: 'Dewi Putri', action: 'memperbarui identitas', time: subDays(new Date(), 1), status: 'complete' },
-              { id: 3, type: 'registration', user: 'Ahmad Hidayat', action: 'mendaftar sebagai peserta baru', time: subDays(new Date(), 1), status: 'pending' },
-              { id: 4, type: 'attendance', user: 'Siti Rahayu', action: 'melakukan presensi', time: subDays(new Date(), 2), status: 'late' },
-              { id: 5, type: 'identity', user: 'Reza Pratama', action: 'mengunggah dokumen surat permohonan', time: subDays(new Date(), 3), status: 'complete' }
-            ]);
-          }
+          setAttendanceTrend(data.attendanceTrend || []);
+          setRecentActivities(data.recentActivities || []);
         } else {
-          // If API fails, fall back to mock data for development
-          console.error('Error fetching dashboard stats, using mock data instead:', await response.text());
-          
-          // Mock data remains the same as before
-          const mockStats = {
-            totalUsers: 48,
-            todayAttendance: 36,
-            presentToday: 32,
-            lateToday: 4,
-            absentToday: 12,
-            pendingIdentities: 5,
-            totalInternships: 42,
-            universities: [
-              { name: 'Universitas Indonesia', count: 12 },
-              { name: 'Institut Teknologi Bandung', count: 9 },
-              { name: 'Universitas Gadjah Mada', count: 7 },
-              { name: 'Universitas Brawijaya', count: 6 },
-              { name: 'Universitas Lainnya', count: 14 }
-            ]
-          };
-
-          const mockActivities = [
-            { id: 1, type: 'attendance', user: 'Budi Santoso', action: 'melakukan presensi', time: new Date(), status: 'on-time' },
-            { id: 2, type: 'identity', user: 'Dewi Putri', action: 'memperbarui identitas', time: subDays(new Date(), 1), status: 'complete' },
-            { id: 3, type: 'registration', user: 'Ahmad Hidayat', action: 'mendaftar sebagai peserta baru', time: subDays(new Date(), 1), status: 'pending' },
-            { id: 4, type: 'attendance', user: 'Siti Rahayu', action: 'melakukan presensi', time: subDays(new Date(), 2), status: 'late' },
-            { id: 5, type: 'identity', user: 'Reza Pratama', action: 'mengunggah dokumen surat permohonan', time: subDays(new Date(), 3), status: 'complete' }
-          ];
-
-          const mockTrend = [
-            { date: subDays(new Date(), 6), present: 28, late: 5, absent: 15 },
-            { date: subDays(new Date(), 5), present: 30, late: 3, absent: 15 },
-            { date: subDays(new Date(), 4), present: 29, late: 6, absent: 13 },
-            { date: subDays(new Date(), 3), present: 31, late: 4, absent: 13 },
-            { date: subDays(new Date(), 2), present: 33, late: 2, absent: 13 },
-            { date: subDays(new Date(), 1), present: 30, late: 5, absent: 13 },
-            { date: new Date(), present: 32, late: 4, absent: 12 }
-          ];
-
-          setStats(mockStats);
-          setRecentActivities(mockActivities);
-          setAttendanceTrend(mockTrend);
+          console.error('Error fetching dashboard stats:', await response.text());
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        
-        // Fallback to mock data when there's an error
-        setStats({
-          totalUsers: 48,
-          todayAttendance: 36,
-          presentToday: 32,
-          lateToday: 4,
-          absentToday: 12,
-          pendingIdentities: 5,
-          totalInternships: 42,
-          universities: [
-            { name: 'Universitas Indonesia', count: 12 },
-            { name: 'Institut Teknologi Bandung', count: 9 },
-            { name: 'Universitas Gadjah Mada', count: 7 },
-            { name: 'Universitas Brawijaya', count: 6 },
-            { name: 'Universitas Lainnya', count: 14 }
-          ]
-        });
-        
-        setRecentActivities([
-          { id: 1, type: 'attendance', user: 'Budi Santoso', action: 'melakukan presensi', time: new Date(), status: 'on-time' },
-          { id: 2, type: 'identity', user: 'Dewi Putri', action: 'memperbarui identitas', time: subDays(new Date(), 1), status: 'complete' },
-          { id: 3, type: 'registration', user: 'Ahmad Hidayat', action: 'mendaftar sebagai peserta baru', time: subDays(new Date(), 1), status: 'pending' },
-          { id: 4, type: 'attendance', user: 'Siti Rahayu', action: 'melakukan presensi', time: subDays(new Date(), 2), status: 'late' },
-          { id: 5, type: 'identity', user: 'Reza Pratama', action: 'mengunggah dokumen surat permohonan', time: subDays(new Date(), 3), status: 'complete' }
-        ]);
-        
-        setAttendanceTrend([
-          { date: subDays(new Date(), 6), present: 28, late: 5, absent: 15 },
-          { date: subDays(new Date(), 5), present: 30, late: 3, absent: 15 },
-          { date: subDays(new Date(), 4), present: 29, late: 6, absent: 13 },
-          { date: subDays(new Date(), 3), present: 31, late: 4, absent: 13 },
-          { date: subDays(new Date(), 2), present: 33, late: 2, absent: 13 },
-          { date: subDays(new Date(), 1), present: 30, late: 5, absent: 13 },
-          { date: new Date(), present: 32, late: 4, absent: 12 }
-        ]);
       } finally {
         setLoading(false);
       }
@@ -394,7 +292,7 @@ export default function AdminDashboard() {
               )}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Kode ini akan otomatis berubah setiap 6 jam. Berikan kode ini kepada calon pengguna yang ingin mendaftar.
+              Berikan kode ini kepada calon pengguna yang ingin mendaftar.
             </p>
           </div>
         ) : (

@@ -33,85 +33,53 @@ export default function AttendancePage() {
   }, [currentPage]);
 
   useEffect(() => {
-    // Reset to page 1 when filter changes
     if (currentPage !== 1) {
       setCurrentPage(1);
     } else {
       fetchAttendances();
     }
-  }, [filter]);
+  }, [filter, searchTerm]);
 
   const fetchAttendances = async () => {
     try {
       setLoading(true);
       
-      // Build query params
       const params = new URLSearchParams();
       params.append('page', currentPage);
       params.append('limit', itemsPerPage);
       
+      if (searchTerm) params.append('username', searchTerm);
       if (filter.startDate) params.append('startDate', filter.startDate);
       if (filter.endDate) params.append('endDate', filter.endDate);
-      if (filter.username) params.append('username', filter.username);
       if (filter.status) params.append('status', filter.status);
       
-      try {
-        const response = await fetch(`/api/admin/attendance?${params.toString()}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          setAttendances(data.attendances || []);
-          setTotalPages(Math.max(1, Math.ceil(data.total / itemsPerPage)));
-          
-          // Calculate statistics
-          setStats({
-            total: data.total || 0,
-            onTime: data.stats?.onTime || 0,
-            late: data.stats?.late || 0,
-            absent: data.stats?.absent || 0
-          });
-          
-          // Reset to page 1 if current page is higher than total pages
-          if (currentPage > Math.max(1, Math.ceil(data.total / itemsPerPage))) {
-            setCurrentPage(1);
-          }
-        } else {
-          throw new Error('API response was not ok');
-        }
-      } catch (apiError) {
-        console.error('API error, using mock data instead:', apiError);
-        
-        // If the API fails, use mock data for testing
-        let filteredMockData = [...mockAttendances];
-        
-        // Apply search filter to mock data
-        if (searchTerm) {
-          const search = searchTerm.toLowerCase();
-          filteredMockData = filteredMockData.filter(item => 
-            (item.user?.name && item.user.name.toLowerCase().includes(search)) || 
-            (item.user?.email && item.user.email.toLowerCase().includes(search))
-          );
-        }
-        
-        // Apply status filter
-        if (filter.status) {
-          filteredMockData = filteredMockData.filter(item => item.status === filter.status);
-        }
-        
-        // Set mock data
-        setAttendances(filteredMockData);
-        setTotalPages(Math.ceil(filteredMockData.length / itemsPerPage));
-        
-        // Set mock statistics
+      const response = await fetch(`/api/admin/attendance?${params.toString()}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAttendances(data.attendances || []);
+        setTotalPages(Math.max(1, Math.ceil(data.total / itemsPerPage)));
         setStats({
-          total: mockAttendances.length,
-          onTime: mockAttendances.filter(a => a.status === 'on-time').length,
-          late: mockAttendances.filter(a => a.status === 'late').length,
-          absent: mockAttendances.filter(a => a.status === 'absent').length
+          total: data.total || 0,
+          onTime: data.stats?.onTime || 0,
+          late: data.stats?.late || 0,
+          absent: data.stats?.absent || 0
         });
+        
+        if (currentPage > Math.max(1, Math.ceil(data.total / itemsPerPage))) {
+          setCurrentPage(1);
+        }
+      } else {
+        console.error('API response was not ok');
+        setAttendances([]);
+        setTotalPages(1);
+        setStats({ total: 0, onTime: 0, late: 0, absent: 0 });
       }
     } catch (error) {
       console.error('Error fetching attendances:', error);
+      setAttendances([]);
+      setTotalPages(1);
+      setStats({ total: 0, onTime: 0, late: 0, absent: 0 });
     } finally {
       setLoading(false);
     }
@@ -193,190 +161,232 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-          <div className="mb-4 sm:mb-0">
-            <h1 className="text-2xl font-bold text-gray-800">Data Presensi</h1>
-            <p className="text-gray-600 mt-1">Kelola dan pantau data presensi magang</p>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Data Presensi</h1>
+            <p className="text-sm text-gray-600 mt-0.5">Kelola dan pantau data presensi magang</p>
           </div>
           <button
             onClick={() => exportToExcel()}
-            className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center shadow-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
+            className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shadow-sm text-sm font-medium"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
             Export ke Excel
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Cari nama atau email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
-          <input
-            type="text"
-            placeholder="Cari berdasarkan nama atau email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 py-3 border-gray-300 rounded-md shadow-sm"
-          />
-          <div className="absolute inset-y-0 right-0 flex items-center">
+          {(searchTerm || filter.startDate || filter.endDate || filter.status) && (
             <button
               onClick={resetFilter}
-              className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-r-md border-l border-gray-300 h-full flex items-center"
+              className="px-3 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 text-sm font-medium flex-shrink-0 transition-colors"
             >
-              Reset
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="hidden sm:inline">Reset</span>
             </button>
-          </div>
+          )}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <div className="bg-white px-3 py-2.5 rounded-lg shadow-sm text-center">
+          <span className="text-[10px] sm:text-xs text-gray-500 block">Total</span>
+          <span className="text-base sm:text-lg font-bold text-gray-800">{stats.total}</span>
+        </div>
+        <div className="bg-green-50 px-3 py-2.5 rounded-lg shadow-sm text-center">
+          <span className="text-[10px] sm:text-xs text-green-600 block">Tepat Waktu</span>
+          <span className="text-base sm:text-lg font-bold text-green-700">{stats.onTime}</span>
+        </div>
+        <div className="bg-yellow-50 px-3 py-2.5 rounded-lg shadow-sm text-center">
+          <span className="text-[10px] sm:text-xs text-yellow-600 block">Terlambat</span>
+          <span className="text-base sm:text-lg font-bold text-yellow-700">{stats.late}</span>
+        </div>
+        <div className="bg-red-50 px-3 py-2.5 rounded-lg shadow-sm text-center">
+          <span className="text-[10px] sm:text-xs text-red-600 block">Tidak Hadir</span>
+          <span className="text-base sm:text-lg font-bold text-red-700">{stats.absent}</span>
         </div>
       </div>
       
-      {/* Table Layout */}
+      {/* Content */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-800">
-              <tr>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider w-16">
-                  No
-                </th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Nama
-                </th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Email
-                </th>
-                <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-white uppercase tracking-wider">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center">
-                    <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    </div>
-                    <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
-                    </td>
-                </tr>
-              ) : attendances.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                      <p className="mt-2 text-gray-500">Tidak ada data presensi yang ditemukan</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                attendances.map((attendance, index) => (
-                  <tr key={attendance._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {(currentPage - 1) * itemsPerPage + index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          {attendance.user?.profileImage ? (
-                            <img 
-                              className="h-10 w-10 rounded-full object-cover" 
-                              src={attendance.user.profileImage} 
-                              alt={attendance.user.name} 
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span className="text-gray-500 font-medium">
-                                {attendance.user?.name?.charAt(0) || '?'}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {attendance.user?.name || '-'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {attendance.user?.university || '-'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{attendance.user?.email || '-'}</div>
-                      <div className="text-sm text-gray-500">
-                        {attendance.user?.studyProgram && attendance.user?.faculty 
-                          ? `${attendance.user.studyProgram}, ${attendance.user.faculty}`
-                          : '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-3">
-                        <button
-                          onClick={() => exportToExcel(attendance._id)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors flex items-center"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                          Excel
-                        </button>
-                        <Link
-                          href={`/admin/attendance/${attendance._id}`}
-                          className="text-green-600 hover:text-green-800 transition-colors flex items-center"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          Detail
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Stats & Pagination */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2">
-              <div className="px-4 py-2 bg-white rounded-md shadow-sm">
-                <span className="text-xs text-gray-500 block">Total</span>
-                <span className="text-lg font-semibold">{stats.total}</span>
-              </div>
-              <div className="px-4 py-2 bg-green-50 text-green-700 rounded-md shadow-sm">
-                <span className="text-xs text-green-500 block">Tepat Waktu</span>
-                <span className="text-lg font-semibold">{stats.onTime}</span>
-              </div>
-              <div className="px-4 py-2 bg-yellow-50 text-yellow-700 rounded-md shadow-sm">
-                <span className="text-xs text-yellow-500 block">Terlambat</span>
-                <span className="text-lg font-semibold">{stats.late}</span>
-              </div>
-              <div className="px-4 py-2 bg-red-50 text-red-700 rounded-md shadow-sm">
-                <span className="text-xs text-red-500 block">Tidak Hadir</span>
-                <span className="text-lg font-semibold">{stats.absent}</span>
-              </div>
-            </div>
-            
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <p className="mt-3 text-sm text-gray-500">Memuat data...</p>
           </div>
-        </div>
+        ) : attendances.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p className="mt-2 text-gray-500 text-sm">Tidak ada data presensi yang ditemukan</p>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Card Layout */}
+            <div className="sm:hidden divide-y divide-gray-100">
+              {attendances.map((attendance, index) => (
+                <div key={attendance._id} className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-shrink-0 h-10 w-10">
+                      {attendance.user?.profileImage ? (
+                        <img className="h-10 w-10 rounded-full object-cover" src={attendance.user.profileImage} alt={attendance.user?.name} />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-gray-500 font-semibold text-sm">{attendance.user?.name?.charAt(0) || '?'}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{attendance.user?.name || '-'}</p>
+                      <p className="text-xs text-gray-500 truncate">{attendance.user?.email || '-'}</p>
+                    </div>
+                    <span className="text-xs text-gray-400 font-medium">#{(currentPage - 1) * itemsPerPage + index + 1}</span>
+                  </div>
+                  {attendance.user?.university && (
+                    <p className="text-xs text-gray-400 mb-3">{attendance.user.university}{attendance.user?.studyProgram ? ` · ${attendance.user.studyProgram}` : ''}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/admin/attendance/${attendance._id}`}
+                      className="flex-1 text-center px-3 py-2 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors"
+                    >
+                      Lihat Detail
+                    </Link>
+                    <button
+                      onClick={() => exportToExcel(attendance._id)}
+                      className="flex-1 text-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      Export Excel
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-16">No</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nama</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Email</th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {attendances.map((attendance, index) => (
+                    <tr key={attendance._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            {attendance.user?.profileImage ? (
+                              <img className="h-10 w-10 rounded-full object-cover" src={attendance.user.profileImage} alt={attendance.user.name} />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-gray-500 font-medium">{attendance.user?.name?.charAt(0) || '?'}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{attendance.user?.name || '-'}</div>
+                            <div className="text-sm text-gray-500">{attendance.user?.university || '-'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{attendance.user?.email || '-'}</div>
+                        <div className="text-sm text-gray-500">
+                          {attendance.user?.studyProgram && attendance.user?.faculty
+                            ? `${attendance.user.studyProgram}, ${attendance.user.faculty}`
+                            : '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() => exportToExcel(attendance._id)}
+                            className="text-blue-600 hover:text-blue-800 transition-colors flex items-center"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Excel
+                          </button>
+                          <Link
+                            href={`/admin/attendance/${attendance._id}`}
+                            className="text-green-600 hover:text-green-800 transition-colors flex items-center"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Detail
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* Pagination */}
+        {!loading && attendances.length > 0 && (
+          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-xs text-gray-500">
+                Menampilkan {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, stats.total)} dari {stats.total} data
+              </p>
+              {totalPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

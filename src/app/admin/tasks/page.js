@@ -153,14 +153,12 @@ export default function AdminTasksPage() {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Kelola Tugas</h1>
-      </div>
+    <div className="space-y-4">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Kelola Tugas</h1>
 
       {/* Filter Status */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 mb-6">
-        <div className="flex flex-wrap gap-2">
+      <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           {['all', 'pending', 'review', 'revision', 'done'].map((status) => (
             <button
               key={status}
@@ -168,10 +166,10 @@ export default function AdminTasksPage() {
                 setSelectedStatus(status);
                 setPage(1);
               }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
                 selectedStatus === status
                   ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {status === 'all' ? 'Semua' : getStatusText(status)} 
@@ -198,51 +196,44 @@ export default function AdminTasksPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-3 mb-4">
             {tasks.map((task) => (
               <motion.div
                 key={task._id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => handleTaskClick(task)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{task.title}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(task.status)}`}>
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <h3 className="text-sm sm:text-base font-bold text-gray-800 truncate">{task.title}</h3>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${getStatusBadge(task.status)}`}>
                         {getStatusText(task.status)}
                       </span>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{task.description}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="font-medium">{task.userId?.name || 'Unknown'}</span>
-                      <span>•</span>
+                    <p className="text-xs sm:text-sm text-gray-500 mb-2 line-clamp-2">{task.description}</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
+                      <span className="font-medium text-gray-600">{task.userId?.name || 'Unknown'}</span>
                       <span>{format(new Date(task.createdAt), 'dd MMM yyyy, HH:mm', { locale: id })}</span>
                       {task.file && (
-                        <>
-                          <span>•</span>
-                          <a
-                            href={task.file}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary-500 hover:text-primary-600"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            Lihat File
-                          </a>
-                        </>
+                        <a
+                          href={task.file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-500 hover:text-primary-600"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Lihat File
+                        </a>
                       )}
                       {task.comments && task.comments.length > 0 && (
-                        <>
-                          <span>•</span>
-                          <span className="text-primary-500">{task.comments.length} Komentar</span>
-                        </>
+                        <span className="text-primary-500">{task.comments.length} Komentar</span>
                       )}
                     </div>
                   </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-300 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -251,27 +242,32 @@ export default function AdminTasksPage() {
           </div>
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
-            <div className="flex justify-center items-center space-x-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sebelumnya
-              </button>
-              <span className="px-4 py-2">
-                Halaman {page} dari {pagination.pages}
-              </span>
-              <button
-                onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
-                disabled={page === pagination.pages}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Selanjutnya
-              </button>
-            </div>
-          )}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-gray-500">
+              Menampilkan {tasks.length} dari {pagination.total} tugas
+            </p>
+            {pagination.pages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  Sebelumnya
+                </button>
+                <span className="text-xs text-gray-500">
+                  {page} / {pagination.pages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
+                  disabled={page === pagination.pages}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium text-gray-600 hover:bg-gray-50"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            )}
+          </div>
         </>
       )}
 

@@ -305,277 +305,188 @@ export default function AttendanceDetailPage({ params }) {
     : null;
 
   return (
-    <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
             </svg>
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">Detail Presensi</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Detail Presensi</h1>
         </div>
         <button
           onClick={exportToExcel}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm font-medium"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           Export ke Excel
         </button>
       </div>
 
-      {/* User info header */}
-      <div className="bg-white shadow rounded-lg overflow-hidden p-6">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-200 border border-gray-300 flex-shrink-0">
+      {/* User Info Card */}
+      <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6 border border-gray-100">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
             {user.profileImage ? (
-              <Image
-                src={user.profileImage}
-                alt={user.name || 'User'}
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-              />
+              <Image src={user.profileImage} alt={user.name || 'User'} width={56} height={56} className="h-full w-full object-cover" />
             ) : (
-              <div className="h-full w-full flex items-center justify-center bg-gray-200 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="h-full w-full flex items-center justify-center text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
             )}
           </div>
-          
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">{user.name || 'N/A'}</h2>
-            <p className="text-sm text-gray-500">{user.university || 'N/A'}</p>
-            <p className="text-sm text-gray-500">{user.faculty || 'N/A'} - {user.studyProgram || 'N/A'}</p>
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-gray-900 truncate">{user.name || 'N/A'}</h2>
+            <p className="text-xs text-gray-500 truncate">{user.email || 'N/A'}</p>
           </div>
         </div>
-      </div>
-
-      {/* Attendance Data Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nilai
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Nama
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.name || 'N/A'}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Email
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.email || 'N/A'}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Universitas
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.university || 'N/A'}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Fakultas
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.faculty || 'N/A'}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Program Studi
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.studyProgram || 'N/A'}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Tanggal Masuk Magang
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.internshipStartDate ? formatDate(user.internshipStartDate) : 'N/A'}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  Durasi Magang
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {internshipDuration || 'N/A'}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { label: 'Universitas', value: user.university },
+            { label: 'Fakultas', value: user.faculty },
+            { label: 'Program Studi', value: user.studyProgram },
+            { label: 'Tanggal Masuk', value: user.internshipStartDate ? formatDate(user.internshipStartDate) : null },
+            { label: 'Durasi Magang', value: internshipDuration },
+          ].map((item, idx) => (
+            <div key={idx} className="bg-gray-50 rounded-lg px-3 py-2.5">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wide">{item.label}</p>
+              <p className="text-sm font-medium text-gray-800 truncate">{item.value || 'N/A'}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Attendance History Section */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Riwayat Presensi</h2>
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+      {/* Attendance History */}
+      <div>
+        <h2 className="text-lg font-bold text-gray-800 mb-3">Riwayat Presensi</h2>
+        <div className="bg-white shadow-sm rounded-lg overflow-hidden border border-gray-100">
           {loading && attendanceHistory.length === 0 ? (
-            <div className="flex justify-center items-center py-8">
+            <div className="flex justify-center items-center py-10">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : attendanceHistory.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-gray-400">Tidak ada riwayat presensi</p>
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile Card Layout */}
+              <div className="sm:hidden divide-y divide-gray-100">
+                {attendanceHistory.map((record, index) => (
+                  <div key={record._id || index} className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-gray-800">{formatDate(record.date)}</p>
+                      <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${getStatusBadgeClass(record.status)}`}>
+                        {getStatusText(record.status)}
+                      </span>
+                    </div>
+                    <div className="flex gap-4 text-xs text-gray-500">
+                      <div>
+                        <span className="text-gray-400">Masuk: </span>
+                        <span className="font-medium text-gray-700">{formatTime(record.checkInTime)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Pulang: </span>
+                        <span className="font-medium text-gray-700">{formatTime(record.checkOutTime)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table Layout */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-800 text-white">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                        Nama
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                        Tanggal
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                        Presensi Masuk
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                        Presensi Pulang
-                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Tanggal</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Masuk</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Pulang</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {attendanceHistory.length === 0 ? (
-                      <tr>
-                        <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
-                          Tidak ada riwayat presensi
+                    {attendanceHistory.map((record, index) => (
+                      <tr key={record._id || index} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{formatDate(record.date)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTime(record.checkInTime)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(record.status)}`}>
+                            {getStatusText(record.status)}
+                          </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatTime(record.checkOutTime)}</td>
                       </tr>
-                    ) : (
-                      attendanceHistory.map((record, index) => (
-                        <tr key={record._id || index} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.name || 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatDate(record.date)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatTime(record.checkInTime)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              record.status === 'on-time' ? 'bg-green-100 text-green-800' : 
-                              record.status === 'late' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {getStatusText(record.status)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatTime(record.checkOutTime)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
               
               {/* Pagination */}
-              {attendanceHistory.length > 0 && (
-                <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                        currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      Sebelumnya
-                    </button>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                        currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      Selanjutnya
-                    </button>
-                  </div>
-                  
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Menampilkan <span className="font-medium">{Math.min((currentPage - 1) * itemsPerPage + 1, attendanceHistory.length)}</span> sampai <span className="font-medium">{Math.min(currentPage * itemsPerPage, attendanceHistory.length)}</span> dari <span className="font-medium">{totalPages * itemsPerPage}</span> hasil
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              {totalPages > 0 && (
+                <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p className="text-xs text-gray-500">
+                      Halaman {currentPage} dari {totalPages}
+                    </p>
+                    {totalPages > 1 && (
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 ${
-                            currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-500 hover:bg-gray-50'
-                          }`}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium text-gray-600 hover:bg-white"
                         >
-                          <span className="sr-only">Previous</span>
-                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
+                          Sebelumnya
                         </button>
-                        
-                        {/* Page numbers */}
-                        {[...Array(totalPages)].map((_, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handlePageChange(index + 1)}
-                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
-                              currentPage === index + 1 ? 'bg-blue-50 text-blue-600 z-10' : 'bg-white text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {index + 1}
-                          </button>
-                        ))}
-                        
+                        <div className="flex gap-1">
+                          {[...Array(Math.min(totalPages, 5))].map((_, index) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = index + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = index + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + index;
+                            } else {
+                              pageNum = currentPage - 2 + index;
+                            }
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                                  currentPage === pageNum
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-600 hover:bg-white border border-gray-300'
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            );
+                          })}
+                        </div>
                         <button
                           onClick={() => handlePageChange(currentPage + 1)}
                           disabled={currentPage === totalPages}
-                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 ${
-                            currentPage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-500 hover:bg-gray-50'
-                          }`}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-xs font-medium text-gray-600 hover:bg-white"
                         >
-                          <span className="sr-only">Next</span>
-                          <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                          </svg>
+                          Selanjutnya
                         </button>
-                      </nav>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

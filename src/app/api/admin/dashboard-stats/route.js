@@ -105,21 +105,23 @@ export async function GET(request) {
       .populate('userId', 'name')
       .lean();
       
-    const recentActivities = recentAttendance.map(attendance => {
-      let status;
-      if (attendance.status === 'present') status = 'on-time';
-      else if (attendance.status === 'late') status = 'late';
-      else status = 'absent';
-      
-      return {
-        id: attendance._id.toString(),
-        type: 'attendance',
-        user: attendance.userId.name,
-        action: 'melakukan presensi',
-        time: attendance.createdAt,
-        status
-      };
-    });
+    const recentActivities = recentAttendance
+      .filter(attendance => attendance.userId)
+      .map(attendance => {
+        let status;
+        if (attendance.status === 'present') status = 'on-time';
+        else if (attendance.status === 'late') status = 'late';
+        else status = 'absent';
+        
+        return {
+          id: attendance._id.toString(),
+          type: 'attendance',
+          user: attendance.userId.name,
+          action: 'melakukan presensi',
+          time: attendance.createdAt,
+          status
+        };
+      });
     
     return NextResponse.json({
       totalUsers,
