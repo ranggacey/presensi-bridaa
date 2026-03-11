@@ -193,7 +193,7 @@ export default function Login() {
         </div>
         
         <motion.div variants={itemVariants} className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
-          &copy; {new Date().getFullYear()} Sistem Presensi Modern. All rights reserved.
+          &copy; {new Date().getFullYear()} All rights reserved.
         </motion.div>
       </motion.div>
     </div>
