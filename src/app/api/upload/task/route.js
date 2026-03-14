@@ -50,18 +50,24 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    // Get original filename
+    // Get original filename dan ekstensi
     const originalName = file.name;
+    const ext = originalName.includes('.')
+      ? originalName.slice(originalName.lastIndexOf('.')).toLowerCase()
+      : '';
+    const safeExt = /^\.(pdf|doc|docx|xls|xlsx|jpg|jpeg|png|gif|webp|zip)$/.test(ext)
+      ? ext
+      : '';
     
     // Convert the file to a Buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    // Create unique public_id (tanpa folder karena akan di-set di uploadToCloudinary)
-    const publicId = `task-${session.user.id}-${Date.now()}`;
+    // public_id pakai ekstensi asli supaya di Cloudinary ke-detect sebagai Word/PDF/dll
+    const publicId = `task-${session.user.id}-${Date.now()}${safeExt}`;
     
     // Upload ke Cloudinary
-    console.log('Uploading task file to Cloudinary...');
+    console.log('Uploading task file to Cloudinary...', { originalName, publicId });
     const result = await uploadToCloudinary(buffer, 'tasks', publicId);
     
     console.log('Task file upload successful:', result.secure_url);

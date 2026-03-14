@@ -18,6 +18,11 @@ export default function AdminTasksPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, pages: 1 });
 
+  const isDocFile = (fileName = '') => {
+    const lower = fileName.toLowerCase();
+    return lower.endsWith('.doc') || lower.endsWith('.docx');
+  };
+
   useEffect(() => {
     if (session) {
       fetchTasks();
@@ -218,15 +223,25 @@ export default function AdminTasksPage() {
                       <span className="font-medium text-gray-600">{task.userId?.name || 'Unknown'}</span>
                       <span>{format(new Date(task.createdAt), 'dd MMM yyyy, HH:mm', { locale: id })}</span>
                       {task.file && (
-                        <a
-                          href={task.file}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-500 hover:text-primary-600"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Lihat File
-                        </a>
+                        isDocFile(task.fileName || task.file) ? (
+                          <a
+                            href={`/api/tasks/download?taskId=${task._id}`}
+                            className="text-primary-500 hover:text-primary-600"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Download File
+                          </a>
+                        ) : (
+                          <a
+                            href={task.file}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-500 hover:text-primary-600"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Lihat File
+                          </a>
+                        )
                       )}
                       {task.comments && task.comments.length > 0 && (
                         <span className="text-primary-500">{task.comments.length} Komentar</span>
@@ -314,17 +329,29 @@ export default function AdminTasksPage() {
               {selectedTask.file && (
                 <div className="mb-6">
                   <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">File:</h3>
-                  <a
-                    href={selectedTask.file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-500 hover:text-primary-600 flex items-center space-x-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a2 2 0 000-2.828l-6.414-6.414a2 2 0 10-2.828 2.828L15.172 7z" />
-                    </svg>
-                    <span>{selectedTask.fileName || 'Lihat File'}</span>
-                  </a>
+                  {isDocFile(selectedTask.fileName || selectedTask.file) ? (
+                    <a
+                      href={`/api/tasks/download?taskId=${selectedTask._id}`}
+                      className="text-primary-500 hover:text-primary-600 flex items-center space-x-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      <span>{selectedTask.fileName || 'Download File'}</span>
+                    </a>
+                  ) : (
+                    <a
+                      href={selectedTask.file}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-500 hover:text-primary-600 flex items-center space-x-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a2 2 0 000-2.828l-6.414-6.414a2 2 0 10-2.828 2.828L15.172 7z" />
+                      </svg>
+                      <span>{selectedTask.fileName || 'Lihat File'}</span>
+                    </a>
+                  )}
                 </div>
               )}
 
@@ -375,6 +402,38 @@ export default function AdminTasksPage() {
 
               {/* Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={async () => {
+                    if (!selectedTask) return;
+                    const confirmDelete = confirm('Yakin ingin menghapus tugas ini beserta filenya?');
+                    if (!confirmDelete) return;
+                    try {
+                      const response = await fetch(`/api/tasks/${selectedTask._id}`, {
+                        method: 'DELETE',
+                      });
+                      const data = await response.json();
+                      if (response.ok) {
+                        alert('Tugas berhasil dihapus');
+                        setShowModal(false);
+                        setSelectedTask(null);
+                        setComment('');
+                        fetchTasks();
+                        fetchAllTasksForCount();
+                      } else {
+                        alert(data.message || 'Gagal menghapus tugas');
+                      }
+                    } catch (error) {
+                      console.error('Error deleting task:', error);
+                      alert('Terjadi kesalahan saat menghapus tugas');
+                    }
+                  }}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center space-x-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span>Hapus</span>
+                </button>
                 {selectedTask.status !== 'done' && (
                   <button
                     onClick={handleMarkDone}

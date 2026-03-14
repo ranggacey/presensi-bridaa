@@ -28,6 +28,11 @@ export default function TasksPage() {
   const [totalTasks, setTotalTasks] = useState(0);
   const itemsPerPage = 10;
 
+  const isDocFile = (fileName = '') => {
+    const lower = fileName.toLowerCase();
+    return lower.endsWith('.doc') || lower.endsWith('.docx');
+  };
+
   useEffect(() => {
     if (session) {
       fetchTasks();
@@ -238,17 +243,29 @@ export default function TasksPage() {
                               {format(new Date(task.createdAt), 'dd MMM yyyy, HH:mm', { locale: id })}
                             </span>
                             {task.file && (
-                              <a
-                                href={task.file}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary-500 hover:text-primary-600 flex items-center space-x-1"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a2 2 0 000-2.828l-6.414-6.414a2 2 0 10-2.828 2.828L15.172 7z" />
-                                </svg>
-                                <span>Lihat File</span>
-                              </a>
+                              isDocFile(task.fileName || task.file) ? (
+                                <a
+                                  href={`/api/tasks/download?taskId=${task._id}`}
+                                  className="text-primary-500 hover:text-primary-600 flex items-center space-x-1"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                  </svg>
+                                  <span>Download File</span>
+                                </a>
+                              ) : (
+                                <a
+                                  href={task.file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-500 hover:text-primary-600 flex items-center space-x-1"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.414a2 2 0 000-2.828l-6.414-6.414a2 2 0 10-2.828 2.828L15.172 7z" />
+                                  </svg>
+                                  <span>Lihat File</span>
+                                </a>
+                              )
                             )}
                           </div>
                         </div>

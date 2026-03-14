@@ -30,12 +30,16 @@ export async function uploadToCloudinary(fileBuffer, folder, publicId) {
   return new Promise((resolve, reject) => {
     // Convert buffer to stream
     const stream = Readable.from(fileBuffer);
-    
+    // File dokumen (Word, Excel, PDF, dll) pakai raw supaya format ke-detect dan tampil benar di Media Library
+    const rawExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.zip'];
+    const isRaw = rawExtensions.some((e) => publicId.toLowerCase().endsWith(e));
+    const resourceType = isRaw ? 'raw' : 'auto';
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: folder,
         public_id: publicId,
-        resource_type: 'auto', // Auto-detect: image, video, raw (PDF, DOC, etc)
+        resource_type: resourceType,
         overwrite: true,
       },
       (error, result) => {
@@ -53,9 +57,10 @@ export async function uploadToCloudinary(fileBuffer, folder, publicId) {
 }
 
 // Helper function untuk delete file dari Cloudinary
-export async function deleteFromCloudinary(publicId) {
+// resourceType: 'image' | 'raw' | 'video' — untuk asset raw (doc, pdf, dll) wajib 'raw'
+export async function deleteFromCloudinary(publicId, resourceType = 'image') {
   try {
-    const result = await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
     return result;
   } catch (error) {
     console.error('Error deleting from Cloudinary:', error);
@@ -63,26 +68,32 @@ export async function deleteFromCloudinary(publicId) {
   }
 }
 
-// Helper function untuk extract public_id dari URL Cloudinary
+// Helper function untuk extract public_id dan resource_type dari URL Cloudinary
+// Returns { publicId, resourceType }
 export function extractPublicIdFromUrl(url) {
   if (!url) return null;
-  
-  // Format URL Cloudinary: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/{version}/{public_id}.{format}
-  // Atau: https://res.cloudinary.com/{cloud_name}/image/upload/v1234567890/folder/filename.jpg
+  // Legacy: return string (publicId only) untuk backward compatibility
+  const parsed = parseCloudinaryUrl(url);
+  return parsed ? parsed.publicId : null;
+}
+
+export function parseCloudinaryUrl(url) {
+  if (!url || !url.includes('cloudinary.com')) return null;
   try {
     const urlParts = url.split('/upload/');
-    if (urlParts.length > 1) {
-      const afterUpload = urlParts[1];
-      // Remove version (v1234567890/)
-      const withoutVersion = afterUpload.replace(/^v\d+\//, '');
-      // Remove extension
-      const publicId = withoutVersion.replace(/\.[^/.]+$/, '');
-      return publicId;
-    }
+    if (urlParts.length < 2) return null;
+    const path = urlParts[0];
+    const afterUpload = urlParts[1];
+    const resourceType = path.includes('/raw/') ? 'raw' : 'image';
+    const withoutVersion = afterUpload.replace(/^v\d+\//, '');
+    // Untuk raw, jangan buang ekstensi (e.g. task-xxx.docx)
+    const publicId = resourceType === 'raw'
+      ? withoutVersion
+      : withoutVersion.replace(/\.[^/.]+$/, '');
+    return { publicId, resourceType };
   } catch (error) {
-    console.error('Error extracting public_id:', error);
+    console.error('Error parsing Cloudinary URL:', error);
+    return null;
   }
-  
-  return null;
 }
 

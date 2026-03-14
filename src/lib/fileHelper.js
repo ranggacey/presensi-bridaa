@@ -1,7 +1,7 @@
 import { unlink } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { deleteFromCloudinary, extractPublicIdFromUrl } from './cloudinary';
+import { deleteFromCloudinary, parseCloudinaryUrl } from './cloudinary';
 
 /**
  * Menghapus file dari server atau Cloudinary
@@ -16,11 +16,11 @@ export async function deleteFile(filePath) {
     
     // Jika URL Cloudinary (mengandung cloudinary.com)
     if (filePath.includes('cloudinary.com')) {
-      const publicId = extractPublicIdFromUrl(filePath);
-      if (publicId) {
+      const parsed = parseCloudinaryUrl(filePath);
+      if (parsed?.publicId) {
         try {
-          await deleteFromCloudinary(publicId);
-          console.log('File deleted from Cloudinary:', publicId);
+          await deleteFromCloudinary(parsed.publicId, parsed.resourceType);
+          console.log('File deleted from Cloudinary:', parsed.publicId);
           return true;
         } catch (error) {
           console.error('Error deleting from Cloudinary:', error);
