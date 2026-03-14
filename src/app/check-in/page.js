@@ -27,15 +27,15 @@ export default function CheckIn() {
 
       if (response.ok) {
         const data = await response.json();
-        alert('Check-in berhasil!');
+        toast.success('Check-in berhasil!');
         router.push('/dashboard');
       } else {
         const error = await response.json();
-        alert(error.message || 'Gagal melakukan check-in');
+        toast.error(error.message || 'Gagal melakukan check-in');
       }
     } catch (error) {
       console.error('Error during check-in:', error);
-      alert('Terjadi kesalahan saat check-in');
+      toast.error('Terjadi kesalahan saat check-in');
     }
   };
 
