@@ -2,6 +2,7 @@ import './globals.css';
 import AuthProvider from './AuthProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { ProfileImageProvider } from '@/components/ProfileImageContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -43,15 +44,17 @@ export default function RootLayout({ children }) {
       <body className="antialiased dark:bg-gray-900 dark:text-white transition-colors duration-300">
         <ThemeProvider>
           <AuthProvider>
-            <ProfileImageProvider>
-              <div className="relative min-h-screen">
-                {/* Background effect */}
-                <div className="absolute inset-0 -z-10 overflow-hidden">
-                  <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+            <ToastProvider>
+              <ProfileImageProvider>
+                <div className="relative min-h-screen">
+                  {/* Background effect */}
+                  <div className="absolute inset-0 -z-10 overflow-hidden">
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+                  </div>
+                  {children}
                 </div>
-                {children}
-              </div>
-            </ProfileImageProvider>
+              </ProfileImageProvider>
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

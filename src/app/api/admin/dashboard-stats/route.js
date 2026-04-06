@@ -98,28 +98,31 @@ export async function GET(request) {
       });
     }
     
-    // Fetch recent activities
-    const recentAttendance = await Attendance.find({})
-      .sort({ createdAt: -1 })
+    // Fetch recent activities - only show actual attendance (with checkInTime)
+    const recentAttendance = await Attendance.find({
+      checkInTime: { $exists: true, $ne: null }, // Only records with actual check-in
+      $or: [
+        { status: 'present' },
+        { status: 'late' }
+      ]
+    })
+      .sort({ checkInTime: -1 }) // Sort by actual check-in time, not creation time
       .limit(5)
       .populate('userId', 'name')
       .lean();
       
     const recentActivities = recentAttendance
-      .filter(attendance => attendance.userId)
+      .filter(attendance => attendance.userId && attendance.checkInTime)
       .map(attendance => {
-        let status;
-        if (attendance.status === 'present') status = 'on-time';
-        else if (attendance.status === 'late') status = 'late';
-        else status = 'absent';
+        const statusText = attendance.status === 'present' ? 'Tepat Waktu' : 'Terlambat';
         
         return {
           id: attendance._id.toString(),
           type: 'attendance',
           user: attendance.userId.name,
-          action: 'melakukan presensi',
-          time: attendance.createdAt,
-          status
+          action: `melakukan presensi - ${statusText}`,
+          time: attendance.checkInTime, // Use checkInTime instead of createdAt
+          status: attendance.status === 'present' ? 'on-time' : 'late'
         };
       });
     

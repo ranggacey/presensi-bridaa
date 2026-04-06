@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import FaceRecognition from '@/components/FaceRecognition';
 import Link from 'next/link';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function CheckOut() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -27,15 +29,18 @@ export default function CheckOut() {
 
       if (response.ok) {
         const data = await response.json();
-        alert('Check-out berhasil!');
-        router.push('/dashboard');
+        toast.success('Check-out berhasil!');
+        // Small delay to show toast before redirect
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
       } else {
         const error = await response.json();
-        alert(error.message || 'Gagal melakukan check-out');
+        toast.error(error.message || 'Gagal melakukan check-out');
       }
     } catch (error) {
       console.error('Error during check-out:', error);
-      alert('Terjadi kesalahan saat check-out');
+      toast.error('Terjadi kesalahan saat check-out');
     }
   };
 

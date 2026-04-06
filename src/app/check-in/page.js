@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import FaceRecognition from '@/components/FaceRecognition';
 import Link from 'next/link';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function CheckIn() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -28,7 +30,10 @@ export default function CheckIn() {
       if (response.ok) {
         const data = await response.json();
         toast.success('Check-in berhasil!');
-        router.push('/dashboard');
+        // Small delay to show toast before redirect
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
       } else {
         const error = await response.json();
         toast.error(error.message || 'Gagal melakukan check-in');

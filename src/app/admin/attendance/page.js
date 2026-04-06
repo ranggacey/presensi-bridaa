@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import Pagination from '@/components/admin/Pagination';
 import Link from 'next/link';
+import { useToast } from '@/contexts/ToastContext';
 
 
 
 export default function AttendancePage() {
+  const { toast } = useToast();
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -156,7 +158,7 @@ export default function AttendancePage() {
       }
     } catch (error) {
       console.error('Error exporting to Excel:', error);
-      alert('Gagal mengekspor data ke Excel');
+      toast.error('Gagal mengekspor data ke Excel');
     }
   };
 
@@ -166,8 +168,8 @@ export default function AttendancePage() {
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Data Presensi</h1>
-            <p className="text-sm text-gray-600 mt-0.5">Kelola dan pantau data presensi magang</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Data Presensi Pengguna</h1>
+            <p className="text-sm text-gray-600 mt-0.5">Lihat daftar pengguna dengan statistik presensi masing-masing</p>
           </div>
           <button
             onClick={() => exportToExcel()}
@@ -190,7 +192,7 @@ export default function AttendancePage() {
             </div>
             <input
               type="text"
-              placeholder="Cari nama atau email..."
+              placeholder="Cari nama, username, atau email pengguna..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="block w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
@@ -252,42 +254,75 @@ export default function AttendancePage() {
             <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <p className="mt-2 text-gray-500 text-sm">Tidak ada data presensi yang ditemukan</p>
+            <p className="mt-2 text-gray-500 text-sm">Tidak ada pengguna yang ditemukan</p>
           </div>
         ) : (
           <>
             {/* Mobile Card Layout */}
             <div className="sm:hidden divide-y divide-gray-100">
-              {attendances.map((attendance, index) => (
-                <div key={attendance._id} className="p-4">
+              {attendances.map((userAttendance, index) => (
+                <div key={userAttendance._id} className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex-shrink-0 h-10 w-10">
-                      {attendance.user?.profileImage ? (
-                        <img className="h-10 w-10 rounded-full object-cover" src={attendance.user.profileImage} alt={attendance.user?.name} />
+                      {userAttendance.user?.profileImage ? (
+                        <img className="h-10 w-10 rounded-full object-cover" src={userAttendance.user.profileImage} alt={userAttendance.user?.name} />
                       ) : (
                         <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                          <span className="text-gray-500 font-semibold text-sm">{attendance.user?.name?.charAt(0) || '?'}</span>
+                          <span className="text-gray-500 font-semibold text-sm">{userAttendance.user?.name?.charAt(0) || '?'}</span>
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{attendance.user?.name || '-'}</p>
-                      <p className="text-xs text-gray-500 truncate">{attendance.user?.email || '-'}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{userAttendance.user?.name || '-'}</p>
+                      <p className="text-xs text-gray-500 truncate">{userAttendance.user?.email || '-'}</p>
                     </div>
                     <span className="text-xs text-gray-400 font-medium">#{(currentPage - 1) * itemsPerPage + index + 1}</span>
                   </div>
-                  {attendance.user?.university && (
-                    <p className="text-xs text-gray-400 mb-3">{attendance.user.university}{attendance.user?.studyProgram ? ` · ${attendance.user.studyProgram}` : ''}</p>
+                  
+                  {/* User Info */}
+                  {userAttendance.user?.university && (
+                    <p className="text-xs text-gray-400 mb-2">{userAttendance.user.university}{userAttendance.user?.studyProgram ? ` · ${userAttendance.user.studyProgram}` : ''}</p>
                   )}
+                  
+                  {/* Attendance Stats */}
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    <div className="text-center">
+                      <span className="block text-xs text-gray-500">Total</span>
+                      <span className="text-sm font-semibold text-gray-800">{userAttendance.stats?.total || 0}</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-xs text-green-600">Tepat</span>
+                      <span className="text-sm font-semibold text-green-700">{userAttendance.stats?.present || 0}</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-xs text-yellow-600">Terlambat</span>
+                      <span className="text-sm font-semibold text-yellow-700">{userAttendance.stats?.late || 0}</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-xs text-red-600">Tidak Hadir</span>
+                      <span className="text-sm font-semibold text-red-700">{userAttendance.stats?.absent || 0}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Latest Attendance */}
+                  {userAttendance.latestAttendance && (
+                    <div className="text-xs text-gray-500 mb-3">
+                      Presensi terakhir: {new Date(userAttendance.latestAttendance.date).toLocaleDateString('id-ID')} 
+                      {userAttendance.latestAttendance.status === 'present' && ' - Tepat Waktu'}
+                      {userAttendance.latestAttendance.status === 'late' && ' - Terlambat'}
+                      {userAttendance.latestAttendance.status === 'absent' && ' - Tidak Hadir'}
+                    </div>
+                  )}
+                  
                   <div className="flex gap-2">
                     <Link
-                      href={`/admin/attendance/${attendance._id}`}
+                      href={`/admin/attendance/${userAttendance._id}`}
                       className="flex-1 text-center px-3 py-2 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors"
                     >
-                      Lihat Detail
+                      Lihat Riwayat
                     </Link>
                     <button
-                      onClick={() => exportToExcel(attendance._id)}
+                      onClick={() => exportToExcel(userAttendance._id)}
                       className="flex-1 text-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
                     >
                       Export Excel
@@ -303,47 +338,95 @@ export default function AttendancePage() {
                 <thead className="bg-gray-800">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider w-16">No</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nama</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Email</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Pengguna</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Statistik Presensi</th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Presensi Terakhir</th>
                     <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {attendances.map((attendance, index) => (
-                    <tr key={attendance._id} className="hover:bg-gray-50 transition-colors">
+                  {attendances.map((userAttendance, index) => (
+                    <tr key={userAttendance._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
-                            {attendance.user?.profileImage ? (
-                              <img className="h-10 w-10 rounded-full object-cover" src={attendance.user.profileImage} alt={attendance.user.name} />
+                            {userAttendance.user?.profileImage ? (
+                              <img className="h-10 w-10 rounded-full object-cover" src={userAttendance.user.profileImage} alt={userAttendance.user.name} />
                             ) : (
                               <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <span className="text-gray-500 font-medium">{attendance.user?.name?.charAt(0) || '?'}</span>
+                                <span className="text-gray-500 font-medium">{userAttendance.user?.name?.charAt(0) || '?'}</span>
                               </div>
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{attendance.user?.name || '-'}</div>
-                            <div className="text-sm text-gray-500">{attendance.user?.university || '-'}</div>
+                            <div className="text-sm font-medium text-gray-900">{userAttendance.user?.name || '-'}</div>
+                            <div className="text-sm text-gray-500">{userAttendance.user?.email || '-'}</div>
+                            <div className="text-xs text-gray-400">
+                              {userAttendance.user?.university || '-'}
+                              {userAttendance.user?.studyProgram && ` · ${userAttendance.user.studyProgram}`}
+                            </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{attendance.user?.email || '-'}</div>
-                        <div className="text-sm text-gray-500">
-                          {attendance.user?.studyProgram && attendance.user?.faculty
-                            ? `${attendance.user.studyProgram}, ${attendance.user.faculty}`
-                            : '-'}
+                        <div className="flex justify-center gap-4">
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-gray-800">{userAttendance.stats?.total || 0}</div>
+                            <div className="text-xs text-gray-500">Total</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-green-600">{userAttendance.stats?.present || 0}</div>
+                            <div className="text-xs text-green-600">Tepat Waktu</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-yellow-600">{userAttendance.stats?.late || 0}</div>
+                            <div className="text-xs text-yellow-600">Terlambat</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-red-600">{userAttendance.stats?.absent || 0}</div>
+                            <div className="text-xs text-red-600">Tidak Hadir</div>
+                          </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {userAttendance.latestAttendance ? (
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {new Date(userAttendance.latestAttendance.date).toLocaleDateString('id-ID')}
+                            </div>
+                            <div className="text-xs">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                userAttendance.latestAttendance.status === 'present' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : userAttendance.latestAttendance.status === 'late'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {userAttendance.latestAttendance.status === 'present' ? 'Tepat Waktu' : 
+                                 userAttendance.latestAttendance.status === 'late' ? 'Terlambat' : 'Tidak Hadir'}
+                              </span>
+                            </div>
+                            {userAttendance.latestAttendance.checkInTime && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {new Date(userAttendance.latestAttendance.checkInTime).toLocaleTimeString('id-ID', { 
+                                  hour: '2-digit', minute: '2-digit' 
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">Belum presensi</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-3">
                           <button
-                            onClick={() => exportToExcel(attendance._id)}
+                            onClick={() => exportToExcel(userAttendance._id)}
                             className="text-blue-600 hover:text-blue-800 transition-colors flex items-center"
+                            title="Export data presensi user ini"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -351,14 +434,15 @@ export default function AttendancePage() {
                             Excel
                           </button>
                           <Link
-                            href={`/admin/attendance/${attendance._id}`}
+                            href={`/admin/attendance/${userAttendance._id}`}
                             className="text-green-600 hover:text-green-800 transition-colors flex items-center"
+                            title="Lihat riwayat presensi lengkap"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            Detail
+                            Riwayat
                           </Link>
                         </div>
                       </td>
@@ -375,7 +459,7 @@ export default function AttendancePage() {
           <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-xs text-gray-500">
-                Menampilkan {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, stats.total)} dari {stats.total} data
+                Menampilkan {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, stats.total)} dari {stats.total} pengguna
               </p>
               {totalPages > 1 && (
                 <Pagination
